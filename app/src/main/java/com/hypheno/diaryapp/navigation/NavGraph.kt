@@ -9,6 +9,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.hypheno.diaryapp.presentation.screens.auth.AuthenticationScreen
 import com.hypheno.diaryapp.util.Constants.WRITE_SCREEN_ARGUMENT_KEY
+import com.stevdzasan.messagebar.rememberMessageBarState
+import com.stevdzasan.onetap.rememberOneTapSignInState
 
 @Composable
 fun SetupNavGraph(startDestination: String, navController: NavHostController) {
@@ -21,8 +23,13 @@ fun SetupNavGraph(startDestination: String, navController: NavHostController) {
 
 fun NavGraphBuilder.authenticationRoute() {
     composable(route = Screen.Authentication.route) {
-        AuthenticationScreen(loadingState = false) {
-
+        val oneTapState = rememberOneTapSignInState()
+        val messageBarState = rememberMessageBarState()
+        AuthenticationScreen(
+            loadingState = oneTapState.opened,
+            oneTapState, messageBarState
+        ) {
+            oneTapState.open()
         }
     }
 }
