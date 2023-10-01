@@ -3,6 +3,7 @@ package com.hypheno.diaryapp.navigation
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -19,8 +20,10 @@ import com.hypheno.diaryapp.presentation.components.DisplayAlertDialog
 import com.hypheno.diaryapp.presentation.screens.auth.AuthenticationScreen
 import com.hypheno.diaryapp.presentation.screens.auth.AuthenticationViewModel
 import com.hypheno.diaryapp.presentation.screens.home.HomeScreen
+import com.hypheno.diaryapp.presentation.screens.home.HomeViewModel
 import com.hypheno.diaryapp.util.Constants.APP_ID
 import com.hypheno.diaryapp.util.Constants.WRITE_SCREEN_ARGUMENT_KEY
+import com.hypheno.diaryapp.util.RequestState
 import com.stevdzasan.messagebar.rememberMessageBarState
 import com.stevdzasan.onetap.rememberOneTapSignInState
 import io.realm.kotlin.mongodb.App
@@ -29,12 +32,19 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun SetupNavGraph(startDestination: String, navController: NavHostController) {
+fun SetupNavGraph(
+    startDestination: String,
+    navController: NavHostController,
+    onDataLoaded: () -> Unit
+) {
     NavHost(navController = navController, startDestination = startDestination) {
-        authenticationRoute {
-            navController.popBackStack()
-            navController.navigate(Screen.Home.route)
-        }
+        authenticationRoute(
+            navigateToHome = {
+                navController.popBackStack()
+                navController.navigate(Screen.Home.route)
+            },
+            onDataLoaded = onDataLoaded
+        )
         homeRoute(
             navigateToWrite = {
                 navController.navigate(Screen.Write.route)
@@ -42,13 +52,15 @@ fun SetupNavGraph(startDestination: String, navController: NavHostController) {
             navigateToAuth = {
                 navController.popBackStack()
                 navController.navigate(Screen.Authentication.route)
-            })
+            }, onDataLoaded = onDataLoaded
+        )
         writeRoute()
     }
 }
 
 fun NavGraphBuilder.authenticationRoute(
-    navigateToHome: () -> Unit
+    navigateToHome: () -> Unit,
+    onDataLoaded: () -> Unit
 ) {
     composable(route = Screen.Authentication.route) {
         val oneTapState = rememberOneTapSignInState()
@@ -56,6 +68,11 @@ fun NavGraphBuilder.authenticationRoute(
         val viewModel: AuthenticationViewModel = viewModel()
         val loadingState by viewModel.loadingState
         val isAuthenticated by viewModel.authenticated
+
+        LaunchedEffect(key1 = Unit) {
+            onDataLoaded()
+        }
+
         AuthenticationScreen(
             isAuthenticated,
             loadingState = loadingState,
@@ -88,16 +105,28 @@ fun NavGraphBuilder.authenticationRoute(
 
 fun NavGraphBuilder.homeRoute(
     navigateToWrite: () -> Unit,
-    navigateToAuth: () -> Unit
+    navigateToAuth: () -> Unit,
+    onDataLoaded: () -> Unit
 ) {
     composable(route = Screen.Home.route) {
+        val viewModel: HomeViewModel = viewModel()
+
+        val diaries by viewModel.diaries
+
         val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
         val scope = rememberCoroutineScope()
         var signOutDialogOpened by remember {
             mutableStateOf(false)
         }
 
+        LaunchedEffect(key1 = diaries) {
+            if (diaries !is RequestState.Loading) {
+                onDataLoaded()
+            }
+        }
+
         HomeScreen(
+            diaries,
             drawerState = drawerState,
             onMenuClicked = {
                 scope.launch {

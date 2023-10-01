@@ -9,14 +9,20 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.hypheno.diaryapp.ui.theme.DiaryAppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeTopBar(onMenuClicked: () -> Unit) {
+fun HomeTopBar(
+    scrollBehavior: TopAppBarScrollBehavior,
+    onMenuClicked: () -> Unit
+) {
     TopAppBar(
+        scrollBehavior = scrollBehavior,
         navigationIcon = {
             IconButton(onClick = onMenuClicked) {
                 Icon(
@@ -41,11 +47,12 @@ fun HomeTopBar(onMenuClicked: () -> Unit) {
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview
 @Composable
 private fun Preview() {
     DiaryAppTheme {
-        HomeTopBar {
+        HomeTopBar(TopAppBarDefaults.exitUntilCollapsedScrollBehavior()) {
 
         }
     }
