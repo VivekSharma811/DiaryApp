@@ -1,5 +1,6 @@
 package com.hypheno.diaryapp.model
 
+import com.hypheno.diaryapp.util.toRealmInstant
 import io.realm.kotlin.ext.realmListOf
 import io.realm.kotlin.types.RealmInstant
 import io.realm.kotlin.types.RealmList
@@ -16,5 +17,5 @@ open class Diary : RealmObject {
     var title: String = ""
     var description: String = ""
     var images: RealmList<String> = realmListOf()
-    var date: RealmInstant = RealmInstant.from(System.currentTimeMillis(), 0)
+    var date: RealmInstant = Instant.now().toRealmInstant()
 }
