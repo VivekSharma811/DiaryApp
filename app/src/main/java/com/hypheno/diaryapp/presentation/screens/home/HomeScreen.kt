@@ -54,6 +54,7 @@ fun HomeScreen(
     drawerState: DrawerState,
     onMenuClicked: () -> Unit,
     navigateToWrite: () -> Unit,
+    navigateToWriteWithArgs: (String) -> Unit,
     onSignOutClicked: () -> Unit
 ) {
     var padding by remember {
@@ -84,7 +85,8 @@ fun HomeScreen(
                     HomeContent(
                         paddingValues = it,
                         diaryNotes = diaries.data,
-                        onClick = {})
+                        onClick = navigateToWriteWithArgs
+                    )
                 }
 
                 is RequestState.Error<*> -> {
@@ -157,6 +159,7 @@ private fun Preview() {
             drawerState = rememberDrawerState(initialValue = DrawerValue.Closed),
             onMenuClicked = {},
             navigateToWrite = {},
+            navigateToWriteWithArgs = {},
             onSignOutClicked = {}
         )
     }

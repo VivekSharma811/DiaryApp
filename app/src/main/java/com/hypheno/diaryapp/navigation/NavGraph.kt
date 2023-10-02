@@ -4,6 +4,7 @@ import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -16,11 +17,17 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.pager.rememberPagerState
+import com.hypheno.diaryapp.model.Diary
+import com.hypheno.diaryapp.model.Mood
 import com.hypheno.diaryapp.presentation.components.DisplayAlertDialog
 import com.hypheno.diaryapp.presentation.screens.auth.AuthenticationScreen
 import com.hypheno.diaryapp.presentation.screens.auth.AuthenticationViewModel
 import com.hypheno.diaryapp.presentation.screens.home.HomeScreen
 import com.hypheno.diaryapp.presentation.screens.home.HomeViewModel
+import com.hypheno.diaryapp.presentation.screens.write.WriteScreen
+import com.hypheno.diaryapp.presentation.screens.write.WriteViewModel
 import com.hypheno.diaryapp.util.Constants.APP_ID
 import com.hypheno.diaryapp.util.Constants.WRITE_SCREEN_ARGUMENT_KEY
 import com.hypheno.diaryapp.util.RequestState
@@ -49,12 +56,19 @@ fun SetupNavGraph(
             navigateToWrite = {
                 navController.navigate(Screen.Write.route)
             },
+            navigateToWriteWithArgs = {
+                navController.navigate(Screen.Write.passDiaryId(it))
+            },
             navigateToAuth = {
                 navController.popBackStack()
                 navController.navigate(Screen.Authentication.route)
             }, onDataLoaded = onDataLoaded
         )
-        writeRoute()
+        writeRoute(
+            onBackPressed = {
+                navController.popBackStack()
+            }
+        )
     }
 }
 
@@ -105,6 +119,7 @@ fun NavGraphBuilder.authenticationRoute(
 
 fun NavGraphBuilder.homeRoute(
     navigateToWrite: () -> Unit,
+    navigateToWriteWithArgs: (String) -> Unit,
     navigateToAuth: () -> Unit,
     onDataLoaded: () -> Unit
 ) {
@@ -134,6 +149,7 @@ fun NavGraphBuilder.homeRoute(
                 }
             },
             navigateToWrite = navigateToWrite,
+            navigateToWriteWithArgs = navigateToWriteWithArgs,
             onSignOutClicked = {
                 signOutDialogOpened = true
             }
@@ -159,7 +175,10 @@ fun NavGraphBuilder.homeRoute(
     }
 }
 
-fun NavGraphBuilder.writeRoute() {
+@OptIn(ExperimentalPagerApi::class)
+fun NavGraphBuilder.writeRoute(
+    onBackPressed: () -> Unit
+) {
     composable(
         route = Screen.Write.route,
         arguments = listOf(navArgument(name = WRITE_SCREEN_ARGUMENT_KEY) {
@@ -168,6 +187,42 @@ fun NavGraphBuilder.writeRoute() {
             defaultValue = null
         })
     ) {
+        val viewModel: WriteViewModel = viewModel()
+        val uiState by viewModel.uiState
+        val pagerState = rememberPagerState()
+        val pageNumber by remember {
+            derivedStateOf { pagerState.currentPage }
+        }
 
+        WriteScreen(
+            uiState = uiState,
+            pagerState = pagerState,
+            onBackPressed = onBackPressed,
+            onDeleteConfirmed = {},
+            onTitleChanged = {
+                viewModel.setTitle(it)
+            },
+            onDescriptionChanged = {
+                viewModel.setDescription(it)
+            },
+            moodName = {
+                Mood.values()[pageNumber].name
+            },
+            onSaveClicked = {
+                viewModel.insertDiary(
+                    Diary().apply {
+                        this.title = uiState.title
+                        this.description = uiState.description
+                        this.mood = Mood.values()[pageNumber].name
+                    },
+                    onSuccess = {
+                        onBackPressed()
+                    },
+                    onError = {
+
+                    }
+                )
+            }
+        )
     }
 }
