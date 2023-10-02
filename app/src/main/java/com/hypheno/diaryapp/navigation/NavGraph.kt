@@ -209,7 +209,7 @@ fun NavGraphBuilder.writeRoute(
                 Mood.values()[pageNumber].name
             },
             onSaveClicked = {
-                viewModel.insertDiary(
+                viewModel.upsertDiary(
                     Diary().apply {
                         this.title = uiState.title
                         this.description = uiState.description

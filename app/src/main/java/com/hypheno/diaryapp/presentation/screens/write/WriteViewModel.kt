@@ -1,8 +1,6 @@
 package com.hypheno.diaryapp.presentation.screens.write
 
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -41,15 +39,14 @@ class WriteViewModel(
         if (uiState.value.selectedDiaryId != null) {
             val diaryId = ObjectId.invoke(uiState.value.selectedDiaryId!!)
             viewModelScope.launch(Dispatchers.IO) {
-                val diary = MongoDB.getSelectedDiary(
-                    diaryId = diaryId
-                )
-                if (diary is RequestState.Success) {
-                    withContext(Dispatchers.Main) {
-                        setSelectedDiary(diary.data)
-                        setTitle(diary.data.title)
-                        setDescription(diary.data.description)
-                        setMood(Mood.valueOf(diary.data.mood))
+                MongoDB.getSelectedDiary(diaryId = diaryId).collect { diary ->
+                    if (diary is RequestState.Success) {
+                        withContext(Dispatchers.Main) {
+                            setSelectedDiary(diary.data)
+                            setTitle(diary.data.title)
+                            setDescription(diary.data.description)
+                            setMood(Mood.valueOf(diary.data.mood))
+                        }
                     }
                 }
             }
@@ -72,21 +69,53 @@ class WriteViewModel(
         uiState.value = uiState.value.copy(mood = mood)
     }
 
-    fun insertDiary(
+    fun upsertDiary(
         diary: Diary,
         onSuccess: () -> Unit,
         onError: (String) -> Unit
     ) {
         viewModelScope.launch(Dispatchers.IO) {
-            val result = MongoDB.addNewDiary(diary)
-            if (result is RequestState.Success) {
-                withContext(Dispatchers.Main) {
-                    onSuccess()
-                }
-            } else if (result is RequestState.Error<*>) {
-                withContext(Dispatchers.Main) {
-                    onError(result.error.message.toString())
-                }
+            if (uiState.value.selectedDiaryId != null) {
+                updateDiary(diary, onSuccess, onError)
+            } else {
+                insertDiary(diary, onSuccess, onError)
+            }
+        }
+    }
+
+    private suspend fun insertDiary(
+        diary: Diary,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        val result = MongoDB.insertDiary(diary)
+        if (result is RequestState.Success) {
+            withContext(Dispatchers.Main) {
+                onSuccess()
+            }
+        } else if (result is RequestState.Error<*>) {
+            withContext(Dispatchers.Main) {
+                onError(result.error.message.toString())
+            }
+        }
+    }
+
+    private suspend fun updateDiary(
+        diary: Diary,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        val result = MongoDB.updateDiary(diary.apply {
+            _id = ObjectId.invoke(uiState.value.selectedDiaryId!!)
+            date = uiState.value.selectedDiary!!.date
+        })
+        if (result is RequestState.Success) {
+            withContext(Dispatchers.Main) {
+                onSuccess()
+            }
+        } else if (result is RequestState.Error<*>) {
+            withContext(Dispatchers.Main) {
+                onError(result.error.message.toString())
             }
         }
     }

@@ -65,20 +65,20 @@ object MongoDB : MongoRepository {
         }
     }
 
-    override fun getSelectedDiary(diaryId: ObjectId): RequestState<Diary> {
+    override fun getSelectedDiary(diaryId: ObjectId): Flow<RequestState<Diary>> {
         return if (user != null) {
             try {
-                val diary = realm.query<Diary>(query = "_id == $0", diaryId).find().first()
-                RequestState.Success(data = diary)
+                realm.query<Diary>(query = "_id == $0", diaryId).asFlow()
+                    .map { RequestState.Success(data = it.list.first()) }
             } catch (e: Exception) {
-                RequestState.Error<Diary>(e)
+                flow { emit(RequestState.Error<Diary>(e)) }
             }
         } else {
-            RequestState.Error<Diary>(UserNotAuthenticatedException())
+            flow { emit(RequestState.Error<Diary>(UserNotAuthenticatedException())) }
         }
     }
 
-    override suspend fun addNewDiary(diary: Diary): RequestState<Diary> {
+    override suspend fun insertDiary(diary: Diary): RequestState<Diary> {
         return if (user != null) {
             realm.write {
                 try {
@@ -86,6 +86,26 @@ object MongoDB : MongoRepository {
                     RequestState.Success(addedDiary)
                 } catch (e: Exception) {
                     RequestState.Error<Diary>(e)
+                }
+            }
+        } else {
+            RequestState.Error<Diary>(UserNotAuthenticatedException())
+        }
+    }
+
+    override suspend fun updateDiary(diary: Diary): RequestState<Diary> {
+        return if (user != null) {
+            realm.write {
+                val queriedDiary = query<Diary>(query = "_id ==  $0", diary._id).first().find()
+                if (queriedDiary != null) {
+                    queriedDiary.title = diary.title
+                    queriedDiary.description = diary.description
+                    queriedDiary.mood = diary.mood
+                    queriedDiary.images = diary.images
+                    queriedDiary.date = diary.date
+                    RequestState.Success(data = queriedDiary)
+                } else {
+                    RequestState.Error<Diary>(Exception("Diary does not exist"))
                 }
             }
         } else {
