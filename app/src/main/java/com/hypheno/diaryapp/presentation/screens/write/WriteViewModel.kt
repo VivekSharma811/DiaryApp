@@ -12,6 +12,7 @@ import com.hypheno.diaryapp.util.RequestState
 import com.hypheno.diaryapp.util.toRealmInstant
 import io.realm.kotlin.types.RealmInstant
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.mongodb.kbson.ObjectId
@@ -42,16 +43,20 @@ class WriteViewModel(
         if (uiState.value.selectedDiaryId != null) {
             val diaryId = ObjectId.invoke(uiState.value.selectedDiaryId!!)
             viewModelScope.launch(Dispatchers.IO) {
-                MongoDB.getSelectedDiary(diaryId = diaryId).collect { diary ->
-                    if (diary is RequestState.Success) {
-                        withContext(Dispatchers.Main) {
-                            setSelectedDiary(diary.data)
-                            setTitle(diary.data.title)
-                            setDescription(diary.data.description)
-                            setMood(Mood.valueOf(diary.data.mood))
+                MongoDB.getSelectedDiary(diaryId = diaryId)
+                    .catch {
+                        emit(RequestState.Error<Diary>(Exception("Diary does not exist")))
+                    }
+                    .collect { diary ->
+                        if (diary is RequestState.Success) {
+                            withContext(Dispatchers.Main) {
+                                setSelectedDiary(diary.data)
+                                setTitle(diary.data.title)
+                                setDescription(diary.data.description)
+                                setMood(Mood.valueOf(diary.data.mood))
+                            }
                         }
                     }
-                }
             }
         }
     }
@@ -132,6 +137,27 @@ class WriteViewModel(
         } else if (result is RequestState.Error<*>) {
             withContext(Dispatchers.Main) {
                 onError(result.error.message.toString())
+            }
+        }
+    }
+
+    fun deleteDiary(
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        if (uiState.value.selectedDiaryId != null) {
+            val diaryId = ObjectId.invoke(uiState.value.selectedDiaryId!!)
+            viewModelScope.launch(Dispatchers.IO) {
+                val result = MongoDB.deleteDiary(diaryId)
+                if (result is RequestState.Success) {
+                    withContext(Dispatchers.Main) {
+                        onSuccess()
+                    }
+                } else if (result is RequestState.Error<*>) {
+                    withContext(Dispatchers.Main) {
+                        onError(result.error.message.toString())
+                    }
+                }
             }
         }
     }
