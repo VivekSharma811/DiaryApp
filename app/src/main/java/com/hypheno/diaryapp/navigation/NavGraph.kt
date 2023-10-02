@@ -37,6 +37,7 @@ import io.realm.kotlin.mongodb.App
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.ZonedDateTime
 
 @Composable
 fun SetupNavGraph(
@@ -204,6 +205,9 @@ fun NavGraphBuilder.writeRoute(
             },
             onDescriptionChanged = {
                 viewModel.setDescription(it)
+            },
+            onDateTimeUpdated = {
+                viewModel.updateDateTime(it)
             },
             moodName = {
                 Mood.values()[pageNumber].name
