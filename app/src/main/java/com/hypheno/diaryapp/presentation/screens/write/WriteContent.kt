@@ -43,6 +43,7 @@ import com.hypheno.diaryapp.model.Diary
 import com.hypheno.diaryapp.model.GalleryState
 import com.hypheno.diaryapp.model.Mood
 import com.hypheno.diaryapp.presentation.components.GalleryUploader
+import io.realm.kotlin.ext.toRealmList
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalPagerApi::class, ExperimentalMaterial3Api::class)
@@ -56,7 +57,7 @@ fun WriteContent(
     onTitleChanged: (String) -> Unit,
     description: String,
     onDescriptionChanged: (String) -> Unit,
-    onSaveClicked: () -> Unit,
+    onSaveClicked: (Diary) -> Unit,
     onImageSelect: (Uri) -> Unit
 ) {
     val scrollState = rememberScrollState()
@@ -177,7 +178,13 @@ fun WriteContent(
                     .height(54.dp),
                 onClick = {
                     if (uiState.title.isNotEmpty() && uiState.description.isNotEmpty()) {
-                        onSaveClicked()
+                        onSaveClicked(
+                            Diary().apply {
+                                this.title = uiState.title
+                                this.description = uiState.description
+                                this.images = galleryState.images.map { it.remoteImagePath }.toRealmList()
+                            }
+                        )
                     } else {
                         Toast.makeText(
                             context,

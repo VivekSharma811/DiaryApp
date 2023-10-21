@@ -202,7 +202,7 @@ fun NavGraphBuilder.writeRoute(
         val pageNumber by remember {
             derivedStateOf { pagerState.currentPage }
         }
-        val galleryState = rememberGalleryState()
+        val galleryState = viewModel.galleryState
 
         WriteScreen(
             uiState = uiState,
@@ -234,11 +234,7 @@ fun NavGraphBuilder.writeRoute(
             },
             onSaveClicked = {
                 viewModel.upsertDiary(
-                    Diary().apply {
-                        this.title = uiState.title
-                        this.description = uiState.description
-                        this.mood = Mood.values()[pageNumber].name
-                    },
+                    it.apply { mood = Mood.values()[pageNumber].name },
                     onSuccess = {
                         onBackPressed()
                     },
@@ -248,12 +244,8 @@ fun NavGraphBuilder.writeRoute(
                 )
             },
             onImageSelect = {
-                galleryState.addImage(
-                    GalleryImage(
-                        image = it,
-                        remoteImagePath = ""
-                    )
-                )
+                val type = context.contentResolver.getType(it)?.split("/")?.last() ?: "jpg"
+                viewModel.addImage(image = it, imageType = type)
             }
         )
     }

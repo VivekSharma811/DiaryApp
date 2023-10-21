@@ -24,7 +24,7 @@ fun WriteScreen(
     onDeleteConfirmed: () -> Unit,
     onTitleChanged: (String) -> Unit,
     onDescriptionChanged: (String) -> Unit,
-    onSaveClicked: () -> Unit,
+    onSaveClicked: (Diary) -> Unit,
     onDateTimeUpdated: (ZonedDateTime) -> Unit,
     onImageSelect: (Uri) -> Unit
 ) {

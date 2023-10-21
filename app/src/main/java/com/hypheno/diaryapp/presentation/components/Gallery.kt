@@ -43,7 +43,7 @@ import java.lang.Integer.max
 @Composable
 fun Gallery(
     modifier: Modifier = Modifier,
-    images: List<String>,
+    images: List<Uri>,
     imageSize: Dp = 40.dp,
     spaceBetween: Dp = 10.dp,
     imageShape: CornerBasedShape = Shapes().small
@@ -74,7 +74,8 @@ fun Gallery(
                         .data(image)
                         .crossfade(true)
                         .build(),
-                    contentDescription = "Image"
+                    contentDescription = "Image",
+                    contentScale = ContentScale.Crop
                 )
                 Spacer(modifier = Modifier.width(spaceBetween))
             }

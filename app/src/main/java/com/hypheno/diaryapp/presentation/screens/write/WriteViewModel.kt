@@ -1,14 +1,23 @@
 package com.hypheno.diaryapp.presentation.screens.write
 
+import android.net.Uri
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
 import com.hypheno.diaryapp.data.repository.MongoDB
 import com.hypheno.diaryapp.model.Diary
+import com.hypheno.diaryapp.model.GalleryImage
+import com.hypheno.diaryapp.model.GalleryState
 import com.hypheno.diaryapp.model.Mood
 import com.hypheno.diaryapp.util.Constants.WRITE_SCREEN_ARGUMENT_KEY
 import com.hypheno.diaryapp.model.RequestState
+import com.hypheno.diaryapp.model.rememberGalleryState
+import com.hypheno.diaryapp.util.fetchImagesFromFirebase
 import com.hypheno.diaryapp.util.toRealmInstant
 import io.realm.kotlin.types.RealmInstant
 import kotlinx.coroutines.Dispatchers
@@ -21,6 +30,8 @@ import java.time.ZonedDateTime
 class WriteViewModel(
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+
+    val galleryState = GalleryState()
 
     var uiState = mutableStateOf(UiState())
         private set
@@ -54,6 +65,20 @@ class WriteViewModel(
                                 setTitle(diary.data.title)
                                 setDescription(diary.data.description)
                                 setMood(Mood.valueOf(diary.data.mood))
+
+                                fetchImagesFromFirebase(
+                                    remoteImagePaths = diary.data.images,
+                                    onImageDownloaded = { downloadedImage ->
+                                        galleryState.addImage(
+                                            GalleryImage(
+                                                image = downloadedImage,
+                                                remoteImagePath = extractImagePath(
+                                                    fullImageUrl = downloadedImage.toString()
+                                                ),
+                                            )
+                                        )
+                                    }
+                                )
                             }
                         }
                     }
@@ -107,6 +132,7 @@ class WriteViewModel(
             }
         })
         if (result is RequestState.Success) {
+            uploadImagesToFirebase()
             withContext(Dispatchers.Main) {
                 onSuccess()
             }
@@ -131,6 +157,7 @@ class WriteViewModel(
             }
         })
         if (result is RequestState.Success) {
+            uploadImagesToFirebase()
             withContext(Dispatchers.Main) {
                 onSuccess()
             }
@@ -160,6 +187,26 @@ class WriteViewModel(
                 }
             }
         }
+    }
+
+    fun addImage(image: Uri, imageType: String) {
+        val remoteImagePath =
+            "images/${FirebaseAuth.getInstance().currentUser?.uid}/${image.lastPathSegment}-${System.currentTimeMillis()}.$imageType"
+        galleryState.addImage(GalleryImage(image = image, remoteImagePath = remoteImagePath))
+    }
+
+    fun uploadImagesToFirebase() {
+        val storage = FirebaseStorage.getInstance().reference
+        galleryState.images.forEach { galleryImage ->
+            val imagePath = storage.child(galleryImage.remoteImagePath)
+            imagePath.putFile(galleryImage.image)
+        }
+    }
+
+    private fun extractImagePath(fullImageUrl: String): String {
+        val chunks = fullImageUrl.split("%2F")
+        val imageName = chunks[2].split("?").first()
+        return "images/${Firebase.auth.currentUser?.uid}/$imageName"
     }
 }
 
