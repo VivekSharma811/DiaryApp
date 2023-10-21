@@ -13,6 +13,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.FirebaseApp
 import com.hypheno.diaryapp.navigation.Screen
 import com.hypheno.diaryapp.navigation.SetupNavGraph
 import com.hypheno.diaryapp.ui.theme.DiaryAppTheme
@@ -29,10 +30,12 @@ class MainActivity : ComponentActivity() {
             keepSplashOpened
         }
 
+        FirebaseApp.initializeApp(this)
+
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         setContent {
-            DiaryAppTheme {
+            DiaryAppTheme(dynamicColor = false) {
                 val navController = rememberNavController()
                 SetupNavGraph(
                     startDestination = getStartDestination(),
