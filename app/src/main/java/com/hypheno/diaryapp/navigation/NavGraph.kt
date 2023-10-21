@@ -22,6 +22,7 @@ import androidx.navigation.navArgument
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.rememberPagerState
 import com.hypheno.diaryapp.model.Diary
+import com.hypheno.diaryapp.model.GalleryImage
 import com.hypheno.diaryapp.model.Mood
 import com.hypheno.diaryapp.presentation.components.DisplayAlertDialog
 import com.hypheno.diaryapp.presentation.screens.auth.AuthenticationScreen
@@ -32,14 +33,14 @@ import com.hypheno.diaryapp.presentation.screens.write.WriteScreen
 import com.hypheno.diaryapp.presentation.screens.write.WriteViewModel
 import com.hypheno.diaryapp.util.Constants.APP_ID
 import com.hypheno.diaryapp.util.Constants.WRITE_SCREEN_ARGUMENT_KEY
-import com.hypheno.diaryapp.util.RequestState
+import com.hypheno.diaryapp.model.RequestState
+import com.hypheno.diaryapp.model.rememberGalleryState
 import com.stevdzasan.messagebar.rememberMessageBarState
 import com.stevdzasan.onetap.rememberOneTapSignInState
 import io.realm.kotlin.mongodb.App
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.time.ZonedDateTime
 
 @Composable
 fun SetupNavGraph(
@@ -197,10 +198,12 @@ fun NavGraphBuilder.writeRoute(
         val pageNumber by remember {
             derivedStateOf { pagerState.currentPage }
         }
+        val galleryState = rememberGalleryState()
 
         WriteScreen(
             uiState = uiState,
             pagerState = pagerState,
+            galleryState = galleryState,
             onBackPressed = onBackPressed,
             onDeleteConfirmed = {
                 viewModel.deleteDiary(
@@ -238,6 +241,14 @@ fun NavGraphBuilder.writeRoute(
                     onError = {
                         Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
                     }
+                )
+            },
+            onImageSelect = {
+                galleryState.addImage(
+                    GalleryImage(
+                        image = it,
+                        remoteImagePath = ""
+                    )
                 )
             }
         )

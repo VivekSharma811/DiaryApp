@@ -1,4 +1,4 @@
-package com.hypheno.diaryapp.util
+package com.hypheno.diaryapp.model
 
 sealed class RequestState<out T> {
     object Idle : RequestState<Nothing>()

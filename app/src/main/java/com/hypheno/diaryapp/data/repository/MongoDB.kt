@@ -2,7 +2,7 @@ package com.hypheno.diaryapp.data.repository
 
 import com.hypheno.diaryapp.model.Diary
 import com.hypheno.diaryapp.util.Constants.APP_ID
-import com.hypheno.diaryapp.util.RequestState
+import com.hypheno.diaryapp.model.RequestState
 import com.hypheno.diaryapp.util.toInstant
 import io.realm.kotlin.Realm
 import io.realm.kotlin.ext.query

@@ -44,7 +44,7 @@ import androidx.compose.ui.unit.dp
 import com.hypheno.diaryapp.R
 import com.hypheno.diaryapp.data.repository.Diaries
 import com.hypheno.diaryapp.ui.theme.DiaryAppTheme
-import com.hypheno.diaryapp.util.RequestState
+import com.hypheno.diaryapp.model.RequestState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")

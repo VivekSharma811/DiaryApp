@@ -8,7 +8,7 @@ import com.hypheno.diaryapp.data.repository.MongoDB
 import com.hypheno.diaryapp.model.Diary
 import com.hypheno.diaryapp.model.Mood
 import com.hypheno.diaryapp.util.Constants.WRITE_SCREEN_ARGUMENT_KEY
-import com.hypheno.diaryapp.util.RequestState
+import com.hypheno.diaryapp.model.RequestState
 import com.hypheno.diaryapp.util.toRealmInstant
 import io.realm.kotlin.types.RealmInstant
 import kotlinx.coroutines.Dispatchers

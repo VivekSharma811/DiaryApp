@@ -1,5 +1,6 @@
 package com.hypheno.diaryapp.presentation.screens.write
 
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -39,13 +40,16 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.PagerState
 import com.hypheno.diaryapp.model.Diary
+import com.hypheno.diaryapp.model.GalleryState
 import com.hypheno.diaryapp.model.Mood
+import com.hypheno.diaryapp.presentation.components.GalleryUploader
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalPagerApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun WriteContent(
     paddingValues: PaddingValues,
+    galleryState: GalleryState,
     uiState: UiState,
     pagerState: PagerState,
     title: String,
@@ -53,6 +57,7 @@ fun WriteContent(
     description: String,
     onDescriptionChanged: (String) -> Unit,
     onSaveClicked: () -> Unit,
+    onImageSelect: (Uri) -> Unit
 ) {
     val scrollState = rememberScrollState()
     val context = LocalContext.current
@@ -156,6 +161,13 @@ fun WriteContent(
         Column(
             verticalArrangement = Arrangement.Bottom
         ) {
+            Spacer(modifier = Modifier.height(12.dp))
+            GalleryUploader(
+                galleryState = galleryState,
+                onAddClicked = { },
+                onImageSelect = onImageSelect,
+                onImageClicked = {}
+            )
             Spacer(modifier = Modifier.height(12.dp))
             Button(
                 modifier = Modifier
