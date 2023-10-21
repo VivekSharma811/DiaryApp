@@ -9,6 +9,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
+import com.hypheno.diaryapp.data.db.ImageToUploadDao
+import com.hypheno.diaryapp.data.db.entity.ImageToUpload
 import com.hypheno.diaryapp.data.repository.MongoDB
 import com.hypheno.diaryapp.model.Diary
 import com.hypheno.diaryapp.model.GalleryImage
@@ -19,6 +21,7 @@ import com.hypheno.diaryapp.model.RequestState
 import com.hypheno.diaryapp.model.rememberGalleryState
 import com.hypheno.diaryapp.util.fetchImagesFromFirebase
 import com.hypheno.diaryapp.util.toRealmInstant
+import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.kotlin.types.RealmInstant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
@@ -26,9 +29,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.mongodb.kbson.ObjectId
 import java.time.ZonedDateTime
+import javax.inject.Inject
 
-class WriteViewModel(
-    private val savedStateHandle: SavedStateHandle
+@HiltViewModel
+class WriteViewModel @Inject constructor(
+    private val savedStateHandle: SavedStateHandle,
+    private val imagesToUploadDao: ImageToUploadDao
 ) : ViewModel() {
 
     val galleryState = GalleryState()
@@ -200,6 +206,20 @@ class WriteViewModel(
         galleryState.images.forEach { galleryImage ->
             val imagePath = storage.child(galleryImage.remoteImagePath)
             imagePath.putFile(galleryImage.image)
+                .addOnProgressListener {
+                    val sessionUri = it.uploadSessionUri
+                    if (sessionUri != null) {
+                        viewModelScope.launch(Dispatchers.IO) {
+                            imagesToUploadDao.addImageToUpload(
+                                ImageToUpload(
+                                    remoteImagePath = galleryImage.remoteImagePath,
+                                    imageUri = galleryImage.image.toString(),
+                                    sessionUri = sessionUri.toString()
+                                )
+                            )
+                        }
+                    }
+                }
         }
     }
 
