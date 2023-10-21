@@ -40,6 +40,7 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.PagerState
 import com.hypheno.diaryapp.model.Diary
+import com.hypheno.diaryapp.model.GalleryImage
 import com.hypheno.diaryapp.model.GalleryState
 import com.hypheno.diaryapp.model.Mood
 import com.hypheno.diaryapp.presentation.components.GalleryUploader
@@ -58,7 +59,8 @@ fun WriteContent(
     description: String,
     onDescriptionChanged: (String) -> Unit,
     onSaveClicked: (Diary) -> Unit,
-    onImageSelect: (Uri) -> Unit
+    onImageSelect: (Uri) -> Unit,
+    onImageClicked: (GalleryImage) -> Unit,
 ) {
     val scrollState = rememberScrollState()
     val context = LocalContext.current
@@ -169,7 +171,7 @@ fun WriteContent(
                     focusManager.clearFocus()
                 },
                 onImageSelect = onImageSelect,
-                onImageClicked = {}
+                onImageClicked = onImageClicked
             )
             Spacer(modifier = Modifier.height(12.dp))
             Button(
