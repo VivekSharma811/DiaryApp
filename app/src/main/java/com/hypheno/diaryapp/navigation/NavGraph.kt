@@ -1,6 +1,8 @@
 package com.hypheno.diaryapp.navigation
 
 import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
@@ -20,10 +22,6 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.google.accompanist.pager.ExperimentalPagerApi
-import com.google.accompanist.pager.rememberPagerState
-import com.hypheno.diaryapp.model.Diary
-import com.hypheno.diaryapp.model.GalleryImage
 import com.hypheno.diaryapp.model.Mood
 import com.hypheno.diaryapp.presentation.components.DisplayAlertDialog
 import com.hypheno.diaryapp.presentation.screens.auth.AuthenticationScreen
@@ -209,7 +207,7 @@ fun NavGraphBuilder.homeRoute(
     }
 }
 
-@OptIn(ExperimentalPagerApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 fun NavGraphBuilder.writeRoute(
     onBackPressed: () -> Unit
 ) {
@@ -224,7 +222,7 @@ fun NavGraphBuilder.writeRoute(
         val context = LocalContext.current
         val viewModel: WriteViewModel = hiltViewModel()
         val uiState by viewModel.uiState
-        val pagerState = rememberPagerState()
+        val pagerState = rememberPagerState(pageCount = {Mood.values().size})
         val pageNumber by remember {
             derivedStateOf { pagerState.currentPage }
         }

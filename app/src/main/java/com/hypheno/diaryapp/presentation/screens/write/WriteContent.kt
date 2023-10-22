@@ -2,7 +2,9 @@ package com.hypheno.diaryapp.presentation.screens.write
 
 import android.net.Uri
 import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -13,6 +15,8 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -27,6 +31,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
@@ -36,9 +41,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.google.accompanist.pager.ExperimentalPagerApi
-import com.google.accompanist.pager.HorizontalPager
-import com.google.accompanist.pager.PagerState
 import com.hypheno.diaryapp.model.Diary
 import com.hypheno.diaryapp.model.GalleryImage
 import com.hypheno.diaryapp.model.GalleryState
@@ -47,7 +49,7 @@ import com.hypheno.diaryapp.presentation.components.GalleryUploader
 import io.realm.kotlin.ext.toRealmList
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalPagerApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun WriteContent(
     paddingValues: PaddingValues,
@@ -88,17 +90,20 @@ fun WriteContent(
         ) {
             Spacer(modifier = Modifier.height(30.dp))
             HorizontalPager(
-                state = pagerState,
-                count = Mood.values().size
+                state = pagerState
             ) { page ->
-                AsyncImage(
-                    modifier = Modifier.size(120.dp),
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(Mood.values()[page].icon)
-                        .crossfade(true)
-                        .build(),
-                    contentDescription = "Mood"
-                )
+                Box(
+                    modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center
+                ) {
+                    AsyncImage(
+                        modifier = Modifier.size(120.dp),
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(Mood.values()[page].icon)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = "Mood"
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(30.dp))
@@ -184,7 +189,8 @@ fun WriteContent(
                             Diary().apply {
                                 this.title = uiState.title
                                 this.description = uiState.description
-                                this.images = galleryState.images.map { it.remoteImagePath }.toRealmList()
+                                this.images =
+                                    galleryState.images.map { it.remoteImagePath }.toRealmList()
                             }
                         )
                     } else {
