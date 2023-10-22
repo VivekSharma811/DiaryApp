@@ -133,15 +133,15 @@ fun NavGraphBuilder.homeRoute(
     onDataLoaded: () -> Unit
 ) {
     composable(route = Screen.Home.route) {
-        val viewModel: HomeViewModel = viewModel()
+        val viewModel: HomeViewModel = hiltViewModel()
 
         val diaries by viewModel.diaries
 
         val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
         val scope = rememberCoroutineScope()
-        var signOutDialogOpened by remember {
-            mutableStateOf(false)
-        }
+        var signOutDialogOpened by remember { mutableStateOf(false) }
+        var deleteAllDialogOpened by remember { mutableStateOf(false) }
+        val context = LocalContext.current
 
         LaunchedEffect(key1 = diaries) {
             if (diaries !is RequestState.Loading) {
@@ -161,7 +161,13 @@ fun NavGraphBuilder.homeRoute(
             navigateToWriteWithArgs = navigateToWriteWithArgs,
             onSignOutClicked = {
                 signOutDialogOpened = true
-            }
+            },
+            onDeleteAllClicked = {
+                deleteAllDialogOpened = true
+            },
+            dateIsSelected = viewModel.dateIsSelected,
+            onDateSelected = { viewModel.getDiaries(it) },
+            onDateReset = { viewModel.getDiaries() }
         )
 
         DisplayAlertDialog(
@@ -179,6 +185,25 @@ fun NavGraphBuilder.homeRoute(
                         }
                     }
                 }
+            }
+        )
+
+        DisplayAlertDialog(
+            title = "Delete All Diaries",
+            message = "Are you sure you want to delete all your diaries?",
+            dialogOpened = deleteAllDialogOpened,
+            onDialogClosed = { deleteAllDialogOpened = false },
+            onYesClicked = {
+                viewModel.deleteAllDiaries(
+                    onSuccess = {
+                        Toast.makeText(context, "All Diaries deleted", Toast.LENGTH_SHORT).show()
+                        scope.launch { drawerState.close() }
+                    },
+                    onError = {
+                        Toast.makeText(context, "All Diaries deleted", Toast.LENGTH_SHORT).show()
+                        scope.launch { drawerState.close() }
+                    }
+                )
             }
         )
     }

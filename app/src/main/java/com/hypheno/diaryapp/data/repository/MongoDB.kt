@@ -10,11 +10,15 @@ import io.realm.kotlin.log.LogLevel
 import io.realm.kotlin.mongodb.App
 import io.realm.kotlin.mongodb.sync.SyncConfiguration
 import io.realm.kotlin.query.Sort
+import io.realm.kotlin.types.RealmInstant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import org.mongodb.kbson.ObjectId
+import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.ZoneId
+import java.time.ZonedDateTime
 
 object MongoDB : MongoRepository {
 
@@ -57,6 +61,41 @@ object MongoDB : MongoRepository {
                             }
                         )
                     }
+            } catch (e: Exception) {
+                flow { emit(RequestState.Error<Diaries>(e)) }
+            }
+        } else {
+            flow { emit(RequestState.Error<Diaries>(UserNotAuthenticatedException())) }
+        }
+    }
+
+    override fun getFilteredDiaries(zonedDateTime: ZonedDateTime): Flow<Diaries> {
+        return if (user != null) {
+            try {
+                realm.query<Diary>(
+                    "ownerId == $0 AND date < $1 AND date > $2",
+                    user.id,
+                    RealmInstant.from(
+                        LocalDateTime.of(
+                            zonedDateTime.toLocalDate().plusDays(1),
+                            LocalTime.MIDNIGHT
+                        ).toEpochSecond(zonedDateTime.offset), 0
+                    ),
+                    RealmInstant.from(
+                        LocalDateTime.of(
+                            zonedDateTime.toLocalDate(),
+                            LocalTime.MIDNIGHT
+                        ).toEpochSecond(zonedDateTime.offset), 0
+                    ),
+                ).asFlow().map { result ->
+                    RequestState.Success(
+                        data = result.list.groupBy {
+                            it.date.toInstant()
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDate()
+                        }
+                    )
+                }
             } catch (e: Exception) {
                 flow { emit(RequestState.Error<Diaries>(e)) }
             }
@@ -125,6 +164,22 @@ object MongoDB : MongoRepository {
                     } else {
                         RequestState.Error<Boolean>(Exception("Diary does not exist"))
                     }
+                } catch (e: Exception) {
+                    RequestState.Error<Boolean>(e)
+                }
+            }
+        } else {
+            RequestState.Error<Diary>(UserNotAuthenticatedException())
+        }
+    }
+
+    override suspend fun deleteAllDiaries(): RequestState<Boolean> {
+        return if (user != null) {
+            realm.write {
+                val diaries = this.query<Diary>("ownerId == $0", user.id).find()
+                try {
+                    delete(diaries)
+                    RequestState.Success(true)
                 } catch (e: Exception) {
                     RequestState.Error<Boolean>(e)
                 }

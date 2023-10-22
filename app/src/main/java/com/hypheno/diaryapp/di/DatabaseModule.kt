@@ -2,6 +2,7 @@ package com.hypheno.diaryapp.di
 
 import android.content.Context
 import androidx.room.Room
+import com.hypheno.diaryapp.connectivity.NetworkConnectivityObserver
 import com.hypheno.diaryapp.data.db.ImagesDatabase
 import com.hypheno.diaryapp.util.Constants.IMAGES_DATABASE
 import dagger.Module
@@ -34,9 +35,9 @@ object DatabaseModule {
     @Provides
     fun provideImageDeleteDao(database: ImagesDatabase) = database.imageToDeleteDao()
 
-//    @Singleton
-//    @Provides
-//    fun provideNetworkConnectivityObserver(
-//        @ApplicationContext context: Context
-//    ) = NetworkConnectivityObserver(context = context)
+    @Singleton
+    @Provides
+    fun provideNetworkConnectivityObserver(
+        @ApplicationContext context: Context
+    ) = NetworkConnectivityObserver(context = context)
 }
