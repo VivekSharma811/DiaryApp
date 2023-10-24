@@ -27,3 +27,6 @@ The app supports both Dark and Light theme so that user can tailor their journal
 
 ## Dark Theme
 ![alt text](https://github.com/VivekSharma811/DiaryApp/blob/master/demo/feature_graphic_dark_theme.png?raw=true)
+
+## Light Theme
+![alt text](https://github.com/VivekSharma811/DiaryApp/blob/master/demo/feature_graphic_light_theme.png?raw=true)
