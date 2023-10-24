@@ -26,4 +26,4 @@ Diary App employs caching strategies using Realm Sync and RoomDB to provide swif
 The app supports both Dark and Light theme so that user can tailor their journaling experience to their preferences. Style your diary the way you like it.
 
 ## Dark Theme
-![alt text](https://github.com/VivekSharma811/DiaryApp/blob/master/demo/feature_graphic_dark_theme.jpeg?raw=true)
+![alt text](https://github.com/VivekSharma811/DiaryApp/blob/master/demo/feature_graphic_dark_theme.png?raw=true)
